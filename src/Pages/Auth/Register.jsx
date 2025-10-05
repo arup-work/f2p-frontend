@@ -1,49 +1,61 @@
+import { Box, FormGroup, TextField, Typography } from "@mui/material"
+import StyledAuthLayout from "../../Components/StyledAuthLayout"
 import { Form, Formik } from "formik";
-import React, { useCallback } from "react";
-import { LoginValidator } from "../../Shared/Validator";
-import { Box, FormGroup, TextField, Typography } from "@mui/material";
-import { useDispatch } from "react-redux";
+import { RegisterValidator } from "../../Shared/Validator";
 import MuiButton from "../../Components/MUI/MuiButton";
-import StyledAuthLayout from "../../Components/StyledAuthLayout";
+import { Link, useNavigate } from "react-router-dom";
 import AuthService from "../../Services/AuthService";
-import { login } from '../../Redux/Reducers/Auth.Reducer';
-import { Link } from "react-router-dom";
 
 const initialValues = {
+    name: '',
     email: '',
     password: ''
 }
-const Login = () => {
-    const dispatch = useDispatch();
-    const handleFormSubmit = async (values, { setSubmitting }) => {
-        const { email, password } = values;
-        try {
-            const response = await AuthService.login(email, password);
 
-            if (response) {
-                dispatch(
-                    login({
-                        token: response.token,
-                        user: response.user,
-                    })
-                );
-            }
+const Register = () => {
+    const navigate = useNavigate();
+
+    const handleFormSubmit = async (values, { setSubmitting }) => {
+        const { name, email, password } = values;
+        try {
+            const response = await AuthService.register(name, email, password);
+            console.log(response);
+            
+            navigate('/login');
         } catch (error) {
-            console.error("Login failed:", error);
-        } finally {
-            setSubmitting(false); // important: stop the formik submitting state
+             console.error("Registration failed:", error);
+        } finally{
+            setSubmitting(false);
         }
     }
 
     return (
         <StyledAuthLayout>
             <Typography variant="h5" gutterBottom align="center">
-                Login
+                Register
             </Typography>
-            <Formik initialValues={initialValues} validationSchema={LoginValidator} onSubmit={handleFormSubmit}>
+            <Formik initialValues={initialValues} validationSchema={RegisterValidator} onSubmit={handleFormSubmit}>
                 {({ values, handleChange, handleBlur, handleSubmit, touched, errors, isSubmitting }) => {
                     return (
                         <Form noValidate onSubmit={handleSubmit} className="mt-d">
+                            <FormGroup>
+                                <label className="mb-h" htmlFor="name">
+                                    Name
+                                </label>
+                                <TextField
+                                    id="name"
+                                    name="name"
+                                    type="text"
+                                    placeholder="Please enter your name"
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    value={values.name}
+                                    error={touched.name && !!errors?.name}
+                                    helperText={touched.name && errors?.name ? String(errors?.name) : ''}
+                                    sx={{ mb: 2 }}
+                                >
+                                </TextField>
+                            </FormGroup>
                             <FormGroup>
                                 <label className="mb-h" htmlFor="email">
                                     Email
@@ -82,19 +94,20 @@ const Login = () => {
                             </FormGroup>
                             <Box className="pt-d">
                                 <MuiButton loading={isSubmitting} type="submit" fullWidth size="large">
-                                    Login
+                                    Register
                                 </MuiButton>
                                 <Typography className="desc mt">
-                                    Does not have an account?{' '}
-                                   <Link className="no-underline color-primary" to="/">Sign up</Link>
+                                    Already have an account?{' '}
+                                    <Link className="no-underline color-primary" to="/login">Login</Link>
                                 </Typography>
                             </Box>
                         </Form>
                     )
                 }}
             </Formik>
+
         </StyledAuthLayout>
     )
 }
 
-export default Login;
+export default Register;
